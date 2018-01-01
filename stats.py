@@ -4,7 +4,9 @@ import sys
 import logging
 import github
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 def main():
     if len(sys.argv) < 1:
@@ -35,27 +37,32 @@ def flatten_stats(org_name):
     return flattened_json
 
 
-def create_item(org, repo, user, week):
-    week_date, month, year = parse_week_tstamp(week['w'])
+def create_item(org, repo, user, week_info):
+    date, week, month, year = parse_week_tstamp(week_info['w'])
+    name = user['name']
+    if not name:
+        name = user['login']
     return {
         'Organization': org['login'],
         'Repository': repo['name'],
-        'GithubId': user['login'],
-        'Week': week_date,
+        'Commiter': name,
+        'Date': date,
+        'Week': week,
         'Month': month,
         'Year': year,
-        'Added': week['a'],
-        'Deleted': week['d'],
-        'Commits': week['c'],
+        'Added': week_info['a'],
+        'Deleted': week_info['d'],
+        'Commits': week_info['c'],
     }
 
 
 def parse_week_tstamp(tstamp):
-    date = datetime.fromtimestamp(int(tstamp))
-    week_string = date.strftime('%Y-%m-%d')
-    year = date.strftime('%Y')
-    month = date.strftime('%m-%b')
-    return week_string, month, year
+    dt = datetime.fromtimestamp(int(tstamp))
+    date = dt.strftime('%Y-%m-%d')
+    week = dt.strftime('%U')
+    year = dt.strftime('%Y')
+    month = dt.strftime('%m-%b')
+    return date, week, month, year
 
 
 if __name__ == '__main__':
