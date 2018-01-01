@@ -23,7 +23,7 @@ def main():
 def fetch_all(org_name):
     init_dirs(org_name)
     org = get_org(org_name)
-    repos = get_repos(org['login'])
+    repos = get_repos(org_name)
     repos = sorted(repos, key=itemgetter('pushed_at'), reverse=True)
     users = {}
     for repo in repos:
