@@ -1,13 +1,16 @@
+import logging
 from flask import Flask
 import stats
-import logging
+
 logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 
+
 @app.route('/')
 def index():
     return "Github stats api. Invoke with /[github org]"
+
 
 @app.route('/<string:org>')
 def flatten_stats(org):
@@ -17,6 +20,7 @@ def flatten_stats(org):
         mimetype='application/json'
     )
     return response
+
 
 if __name__ == "__main__":
     app.run()
