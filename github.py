@@ -6,6 +6,9 @@ from os import path
 import re
 import sys
 import urllib2
+import logging
+
+logger = logging.getLogger(__name__)
 
 username = os.environ['GITHUB_USERNAME']
 password = os.environ['GITHUB_PASSWORD']
@@ -44,19 +47,18 @@ def get_repos(org, repos=None, page_number=1):
     if not repos and path.exists(file_path):
         with open(file_path, 'r') as f:
             repos = json.loads(f.read())
-        print 'returning repos from disk at: ' + file_path
+        logger.info('returning repos from disk at: %s', file_path)
         return repos
     url = 'https://api.github.com/orgs/' + \
         org + '/repos?page=' + str(page_number)
     request = get_request(url)
     try:
-        print 'requesting ' + url
+        logger.info('requesting %s ', url)
         stream = urllib2.urlopen(request)
         repos = json.load(stream)
         response_header = stream.info()
         # if we have a Link header
         if 'Link' in response_header:
-            print response_header['Link']
             next_link = response_header['Link'].split(',')[0]
             if 'rel="next"' in next_link:
                 next_page_number = re.search('page=(\\d*)', next_link).group(1)
@@ -64,7 +66,7 @@ def get_repos(org, repos=None, page_number=1):
         with open(file_path, 'w') as f:
             f.write(to_json(repos))
     except urllib2.HTTPError, e:
-        print url, None, e.fp.read()
+        logger.error(url, None, e.fp.read())
     return repos
 
 
@@ -73,9 +75,9 @@ def get_contributor_stats_for_repo(org, repo):
     if path.exists(file_path):
         with open(file_path, 'r') as f:
             user = json.loads(f.read())
-        print 'returning stats from disk at: ' + file_path
+        logger.info('returning stats from disk at: %s', file_path)
         return user
-    print 'Fetching stats for repo ' + org + '/' + repo
+    logger.info('Fetching stats for repo ' + org + '/' + repo)
     url = 'https://api.github.com/repos/' + org + '/' + repo + '/stats/contributors'
     request = get_request(url)
     try:
@@ -84,7 +86,7 @@ def get_contributor_stats_for_repo(org, repo):
         with open(file_path, 'w') as f:
             f.write(to_json(stats))
     except urllib2.HTTPError, e:
-        print url, None, e.fp.read()
+        logger.error(url, None, e.fp.read())
     return stats
 
 
@@ -94,9 +96,9 @@ def get_user(login):
     if path.exists(file_path):
         with open(file_path, 'r') as f:
             user = json.loads(f.read())
-        print 'returning user from disk at: ' + file_path
+        logger.info('returning user from disk at: %s', file_path)
         return user
-    print 'Fetching user ' + login
+    logger.info('Fetching user %s', login)
     url = 'https://api.github.com/users/' + login
     request = get_request(url)
     try:
@@ -106,7 +108,7 @@ def get_user(login):
             f.write(to_json(user))
         return user
     except urllib2.HTTPError, e:
-        print url, None, e.fp.read()
+        logger.error(url, None, e.fp.read())
 
 
 def get_org(org):
@@ -115,9 +117,9 @@ def get_org(org):
     if path.exists(file_path):
         with open(file_path, 'r') as f:
             org_json = json.loads(f.read())
-        print 'returning org from disk at: ' + file_path
+        logger.info('returning org from disk at: %s', file_path)
         return org_json
-    print 'Fetching org ' + org
+    logger.info('Fetching org %s', org)
     url = 'https://api.github.com/orgs/' + org
     request = get_request(url)
     try:
@@ -127,7 +129,7 @@ def get_org(org):
             f.write(to_json(org_json))
         return org_json
     except urllib2.HTTPError, e:
-        print url, None, e.fp.read()
+        logger.error(url, None, e.fp.read())
 
 
 def get_request(url):
