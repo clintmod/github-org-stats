@@ -1,5 +1,5 @@
 import logging
-from flask import Flask
+from flask import Flask, request
 import stats
 
 logging.basicConfig(level=logging.INFO)
@@ -15,7 +15,7 @@ def index():
 @app.route('/<string:org>')
 def flatten_stats(org):
     response = app.response_class(
-        response=stats.flatten_stats(org),
+        response=stats.flatten_stats(org, refresh=request.args.get('refresh')),
         status=200,
         mimetype='application/json'
     )

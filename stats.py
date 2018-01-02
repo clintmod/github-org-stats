@@ -11,18 +11,18 @@ logger = logging.getLogger(__name__)
 def main():
     if len(sys.argv) < 1:
         raise ValueError('expected argument to be github org')
-    flatten_stats(sys.argv[1])
+    flatten_stats(sys.argv[1], True)
 
 
-def flatten_stats(org_name):
+def flatten_stats(org_name, refresh=False):
     flattened_json = ""
     file_path = './data/orgs/' + org_name + '/flattened_stats.json'
-    if path.exists(file_path):
+    if not refresh and path.exists(file_path):
         with open(file_path, 'r') as f:
             flattened_json = f.read()
         logger.info('returning stats from disk at: %s', file_path)
         return flattened_json
-    org, repos, users = github.fetch_all(org_name)
+    org, repos, users = github.fetch_all(org_name, refresh)
     flattened = []
     for repo in repos:
         for stat in repo['stats']:

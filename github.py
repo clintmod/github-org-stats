@@ -20,18 +20,18 @@ def main():
     fetch_all(sys.argv[1])
 
 
-def fetch_all(org_name):
+def fetch_all(org_name, refresh=False):
     init_dirs(org_name)
-    org = get_org(org_name)
-    repos = get_repos(org_name)
+    org = get_org(org_name, refresh)
+    repos = get_repos(org_name, refresh)
     repos = sorted(repos, key=itemgetter('pushed_at'), reverse=True)
     users = {}
     for repo in repos:
-        repo['stats'] = get_contributor_stats_for_repo(org_name, repo['name'])
+        repo['stats'] = get_contributor_stats_for_repo(org_name, repo['name'], refresh)
         for stat in repo['stats']:
             login = stat['author']['login']
             if login not in users:
-                users[login] = get_user(login)
+                users[login] = get_user(login, refresh)
     return org, repos, users
 
 
@@ -42,9 +42,9 @@ def init_dirs(org):
         os.makedirs('./data/orgs/' + org + '/stats/')
 
 
-def get_repos(org, repos=None, page_number=1):
+def get_repos(org, repos=None, page_number=1, refresh=False):
     file_path = './data/orgs/' + org + '/repos.json'
-    if not repos and path.exists(file_path):
+    if not refresh and not repos and path.exists(file_path):
         with open(file_path, 'r') as f:
             repos = json.loads(f.read())
         logger.info('returning repos from disk at: %s', file_path)
@@ -70,9 +70,9 @@ def get_repos(org, repos=None, page_number=1):
     return repos
 
 
-def get_contributor_stats_for_repo(org, repo):
+def get_contributor_stats_for_repo(org, repo, refresh=False):
     file_path = './data/orgs/' + org + '/stats/' + repo + '.json'
-    if path.exists(file_path):
+    if not refresh and path.exists(file_path):
         with open(file_path, 'r') as f:
             user = json.loads(f.read())
         logger.info('returning stats from disk at: %s', file_path)
@@ -90,10 +90,10 @@ def get_contributor_stats_for_repo(org, repo):
     return stats
 
 
-def get_user(login):
+def get_user(login, refresh=False):
     user = {}
     file_path = './data/users/' + login + '.json'
-    if path.exists(file_path):
+    if not refresh and path.exists(file_path):
         with open(file_path, 'r') as f:
             user = json.loads(f.read())
         logger.info('returning user from disk at: %s', file_path)
@@ -111,10 +111,10 @@ def get_user(login):
         logger.error(url, None, e.fp.read())
 
 
-def get_org(org):
+def get_org(org, refresh=False):
     org_json = {}
     file_path = './data/orgs/' + org + '/org.json'
-    if path.exists(file_path):
+    if not refresh and path.exists(file_path):
         with open(file_path, 'r') as f:
             org_json = json.loads(f.read())
         logger.info('returning org from disk at: %s', file_path)
